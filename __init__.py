@@ -17,6 +17,14 @@ PALETTE_3 = 0x43B5A0
 IIR_FILTER_TIME_S = 5
 
 
+def reboot(pressed):
+    if pressed:
+        exit_python()
+
+
+buttons.attach(buttons.BTN_HOME, reboot)
+
+# define functions to round, floor and ceil with float resolutions
 def round_res(num, res):
     return round(num / res) * res
 
@@ -38,6 +46,7 @@ def map_vals_fn(in_min, in_max, out_min, out_max):
     return map_vals
 
 
+# generic function to draw samples in a given area on the display
 def draw_samples(
     samples,
     x_min=0,
@@ -101,40 +110,47 @@ def draw_samples(
         )
 
 
-delay_s = 1 / 64
 samples = [(ticks_ms(), bme.pressure)]
 
-while not buttons.value(buttons.BTN_HOME):
-    display.drawFill(BACKGROUND)
+while True:
+    try:
+        display.drawFill(BACKGROUND)
 
-    current_ticks_ms = ticks_ms()
-    current_pressure = bme.pressure
-    diff_ticks_ms = current_ticks_ms - samples[-1][0]
+        current_ticks_ms = ticks_ms()
+        current_pressure = bme.pressure
+        diff_ticks_ms = current_ticks_ms - samples[-1][0]
 
-    # apply simple IIR filtering
-    # use 1/5 of IIR_FILTER_TIME_S, as 97% of signal level will then be achieve within IIR_FILTER_TIME_S
-    alpha = (diff_ticks_ms) / ((diff_ticks_ms) + IIR_FILTER_TIME_S * 10 ** 3 / 5)
+        # apply simple IIR filtering
+        # use 1/5 of IIR_FILTER_TIME_S, as 97% of signal level will then be achieve within IIR_FILTER_TIME_S
+        alpha = (diff_ticks_ms) / ((diff_ticks_ms) + IIR_FILTER_TIME_S * 10 ** 3 / 5)
 
-    fitered_presure = samples[-1][1] + alpha * (current_pressure - samples[-1][1])
+        fitered_presure = samples[-1][1] + alpha * (current_pressure - samples[-1][1])
 
-    samples.append((current_ticks_ms, fitered_presure))
-    draw_samples(samples, y_max=display.height() * 4 // 5)
+        samples.append((current_ticks_ms, fitered_presure))
+        draw_samples(samples, y_max=display.height() * 4 // 5)
 
-    display.drawText(
-        display.width() // 20,
-        display.height() * 19 // 20 - 18,
-        "{} mbar".format(current_pressure),
-        PALETTE_3,
-        "roboto_regular18",
-    )
+        display.drawText(
+            display.height() // 20 - 22,
+            display.height() * 19 // 20 - 22,
+            "{} mbar".format(current_pressure),
+            PALETTE_3,
+            "roboto_regular22",
+        )
 
-    display.flush()
+        display.drawText(
+            display.width() // 2,
+            display.height() * 19 // 20 - 12,
+            "press any button to exit",
+            PALETTE_1,
+            "roboto_regular12",
+        )
 
-    sleep(delay_s)
+        display.flush()
 
-    # if screen is full, half number of stored samples and double delay time
-    if len(samples) > (display.width() / 3):
-        samples = samples[::2]
-        delay_s = delay_s * 2
+        # if screen is full, remove oldest sample
+        if len(samples) > (display.width() / 3):
+            samples = samples[1:]
 
-exit_python()
+        sleep(0)
+    except:
+        exit_python()
