@@ -16,15 +16,6 @@ PALETTE_3 = 0x43B5A0
 
 IIR_FILTER_TIME_S = 5
 
-running = True
-
-
-def reboot(pressed):
-    global running
-    if pressed:
-        running = False
-
-
 buttons.attach(buttons.BTN_HOME, reboot)
 
 
@@ -115,7 +106,7 @@ def draw_samples(
 delay_s = 1 / 64
 samples = [(ticks_us(), bme.pressure)]
 
-while running:
+while not buttons.value(buttons.BTN_HOME):
     display.drawFill(BACKGROUND)
 
     current_ticks_us = ticks_us()
