@@ -1,6 +1,6 @@
-from .bme680 import BME680_I2C
-from time import ticks_us, sleep
+from time import ticks_ms, sleep
 from math import log, ceil, floor
+from bme680.bme680 import BME680_I2C
 from mch22 import exit_python
 from machine import SoftI2C, Pin
 import display
@@ -15,8 +15,6 @@ PALETTE_2 = 0x331A38
 PALETTE_3 = 0x43B5A0
 
 IIR_FILTER_TIME_S = 5
-
-buttons.attach(buttons.BTN_HOME, reboot)
 
 
 def round_res(num, res):
@@ -104,22 +102,22 @@ def draw_samples(
 
 
 delay_s = 1 / 64
-samples = [(ticks_us(), bme.pressure)]
+samples = [(ticks_ms(), bme.pressure)]
 
 while not buttons.value(buttons.BTN_HOME):
     display.drawFill(BACKGROUND)
 
-    current_ticks_us = ticks_us()
+    current_ticks_ms = ticks_ms()
     current_pressure = bme.pressure
-    diff_ticks_us = current_ticks_us - samples[-1][0]
+    diff_ticks_ms = current_ticks_ms - samples[-1][0]
 
     # apply simple IIR filtering
     # use 1/5 of IIR_FILTER_TIME_S, as 97% of signal level will then be achieve within IIR_FILTER_TIME_S
-    alpha = (diff_ticks_us) / ((diff_ticks_us) + IIR_FILTER_TIME_S * 10 ** 6 / 5)
+    alpha = (diff_ticks_ms) / ((diff_ticks_ms) + IIR_FILTER_TIME_S * 10 ** 3 / 5)
 
     fitered_presure = samples[-1][1] + alpha * (current_pressure - samples[-1][1])
 
-    samples.append((current_ticks_us, fitered_presure))
+    samples.append((current_ticks_ms, fitered_presure))
     draw_samples(samples, y_max=display.height() * 4 // 5)
 
     display.drawText(
