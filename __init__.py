@@ -8,28 +8,37 @@ import buttons
 
 bme = BME680_I2C(SoftI2C(scl=Pin(21), sda=Pin(22)))
 
-BACKGROUND = 0x491d88
-PALETTE_0 = 0xfec859
-PALETTE_1 = 0xfa448c
-PALETTE_2 = 0x331a38
-PALETTE_3 = 0x43b5a0
+BACKGROUND = 0x491D88
+PALETTE_0 = 0xFEC859
+PALETTE_1 = 0xFA448C
+PALETTE_2 = 0x331A38
+PALETTE_3 = 0x43B5A0
 
 IIR_FILTER_TIME_S = 5
 
+running = True
+
+
 def reboot(pressed):
-  if pressed:
-    exit_python()
+    global running
+    if pressed:
+        running = False
+
 
 buttons.attach(buttons.BTN_HOME, reboot)
+
 
 def round_res(num, res):
     return round(num / res) * res
 
+
 def floor_res(num, res):
     return floor(num / res) * res
 
+
 def ceil_res(num, res):
     return ceil(num / res) * res
+
 
 def map_vals_fn(in_min, in_max, out_min, out_max):
     scaleFactor = float(out_max - out_min) / float(in_max - in_min)
@@ -82,8 +91,8 @@ def draw_samples(
         min_key_grid = round_res(min_key, key_res)
         min_value_grid = round_res(min_value, value_res)
 
-        n_key_grids = ceil((max_key - min_key_grid) / key_res+0.5)
-        n_value_grids = ceil((max_value - min_value_grid) / value_res+0.5)
+        n_key_grids = ceil((max_key - min_key_grid) / key_res + 0.5)
+        n_value_grids = ceil((max_value - min_value_grid) / value_res + 0.5)
 
         for x_grid_idx in range(n_key_grids):
             x = x_map_fn(min_key_grid + x_grid_idx * key_res)
@@ -95,14 +104,18 @@ def draw_samples(
 
     for idx in range(len(nodes) - 1):
         display.drawLine(
-            nodes[idx][0], nodes[idx][1], nodes[idx + 1][0], nodes[idx + 1][1], PALETTE_3
+            nodes[idx][0],
+            nodes[idx][1],
+            nodes[idx + 1][0],
+            nodes[idx + 1][1],
+            PALETTE_3,
         )
 
 
-delay_s = 1/64
+delay_s = 1 / 64
 samples = [(ticks_us(), bme.pressure)]
 
-while True:
+while running:
     display.drawFill(BACKGROUND)
 
     current_ticks_us = ticks_us()
@@ -118,13 +131,21 @@ while True:
     samples.append((current_ticks_us, fitered_presure))
     draw_samples(samples, y_max=display.height() * 4 // 5)
 
-    display.drawText(display.width()//20, display.height() * 19 // 20-18, "{} mbar".format(current_pressure), PALETTE_3, "roboto_regular18")
+    display.drawText(
+        display.width() // 20,
+        display.height() * 19 // 20 - 18,
+        "{} mbar".format(current_pressure),
+        PALETTE_3,
+        "roboto_regular18",
+    )
 
     display.flush()
 
     sleep(delay_s)
 
     # if screen is full, half number of stored samples and double delay time
-    if len(samples) > (display.width()/3):
+    if len(samples) > (display.width() / 3):
         samples = samples[::2]
-        delay_s = delay_s*2
+        delay_s = delay_s * 2
+
+exit_python()
