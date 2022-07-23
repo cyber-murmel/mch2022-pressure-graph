@@ -1,4 +1,4 @@
-from bme680 import BME680_I2C
+from .bme680 import BME680_I2C
 from time import ticks_us, sleep
 from math import log, ceil, floor
 from mch22 import exit_python
