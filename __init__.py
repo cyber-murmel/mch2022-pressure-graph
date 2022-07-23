@@ -120,7 +120,7 @@ while True:
         current_pressure = bme.pressure
         diff_ticks_ms = current_ticks_ms - samples[-1][0]
 
-        # apply simple IIR filtering
+        # apply single pole IIR filter
         # use 1/5 of IIR_FILTER_TIME_S, as 97% of signal level will then be achieve within IIR_FILTER_TIME_S
         alpha = (diff_ticks_ms) / ((diff_ticks_ms) + IIR_FILTER_TIME_S * 10 ** 3 / 5)
 
@@ -130,7 +130,7 @@ while True:
         draw_samples(samples, y_max=display.height() * 4 // 5)
 
         display.drawText(
-            display.height() // 20 - 22,
+            22-display.height() // 20,
             display.height() * 19 // 20 - 22,
             "{} mbar".format(current_pressure),
             PALETTE_3,
@@ -138,9 +138,9 @@ while True:
         )
 
         display.drawText(
-            display.width() // 2,
-            display.height() * 19 // 20 - 12,
-            "press any button to exit",
+            display.width() * 2 // 3,
+            display.height() * 19 // 20 - 24,
+            "   press any\r\nbutton to exit",
             PALETTE_1,
             "roboto_regular12",
         )
